@@ -21,7 +21,8 @@ function inputDigit(digit) {
 
 // inputting decimal point
 function inputDecimal(dot) {
-    // if the 'displayValue' does not contain a decimal point
+    if (calculator.waitingForSecondOperand === true) return
+        // if the 'displayValue' does not contain a decimal point
     if (!calculator.displayValue.includes(dot)) {
         //Append the decimal point
         calculator.displayValue += dot
@@ -33,8 +34,21 @@ function handleOperator(nextOperator) {
     const { firstOperand, displayValue, operator } = calculator
     const inputValue = parseFloat(displayValue)
 
+    if (operator && calculator.waitingForSecondOperand) {
+        calculator.operator = nextOperator
+
+        console.log(calculator)
+        return
+    }
+
     if (firstOperand === null) {
         calculator.firstOperand = inputValue
+    } else if (operator) {
+        const currentValue = firstOperand || 0
+        const result = performCalculation[operator](firstOperand, inputValue)
+
+        calculator.displayValue = String(result)
+        calculator.firstOperand = result
     }
 
     calculator.waitingForSecondOperand = true
@@ -42,7 +56,25 @@ function handleOperator(nextOperator) {
 
     console.log(calculator)
 }
+const performCalculation = {
+        '/': (firstOperand, secondOperand) => firstOperand / secondOperand,
 
+        '*': (firstOperand, secondOperand) => firstOperand * secondOperand,
+
+        '+': (firstOperand, secondOperand) => firstOperand + secondOperand,
+
+        '-': (firstOperand, secondOperand) => firstOperand - secondOperand,
+
+        '=': (firstOperand, secondOperand) => secondOperand
+    }
+    // resetting the calculator
+function resetCalculator() {
+    calculator.displayValue = '0'
+    calculator.firstOperand = null
+    calculator.waitingForSecondOperand = false
+    calculator.operator = null
+    console.log(calculator)
+}
 // update the display value on the screen
 function updateDisplay() {
     const display = document.querySelector('.calculator-screen')
@@ -70,7 +102,8 @@ keys.addEventListener('click', (event) => {
         return
     }
     if (target.classList.contains('all-clear')) {
-        console.log('clear', target.value)
+        resetCalculator()
+        updateDisplay()
         return
     }
 
